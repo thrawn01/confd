@@ -49,6 +49,7 @@ var (
 	watch             bool
 	appID             string
 	userID            string
+	asInitd           bool
 )
 
 // A Config structure is used to configure confd.
@@ -76,6 +77,10 @@ type Config struct {
 	Watch        bool     `toml:"watch"`
 	AppID        string   `toml:"app_id"`
 	UserID       string   `toml:"user_id"`
+	PreStart     string   `toml:pre_start`
+	PostStart    string   `toml:post_start`
+	PreStop      string   `toml:pre_stop`
+	PostStop     string   `toml:post_stop`
 }
 
 func init() {
@@ -106,6 +111,7 @@ func init() {
 	flag.StringVar(&username, "username", "", "the username to authenticate as (only used with vault and etcd backends)")
 	flag.StringVar(&password, "password", "", "the password to authenticate with (only used with vault and etcd backends)")
 	flag.BoolVar(&watch, "watch", false, "enable watch support")
+	flag.BoolVar(&asInitd, "as-initd", false, "run confd as initd pid 1 process")
 }
 
 // initConfig initializes the confd configuration by first setting defaults,

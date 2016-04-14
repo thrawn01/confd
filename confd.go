@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/kelseyhightower/confd/backends"
+	"github.com/kelseyhightower/confd/initd"
 	"github.com/kelseyhightower/confd/log"
 	"github.com/kelseyhightower/confd/resource/template"
 )
@@ -37,6 +38,15 @@ func main() {
 		os.Exit(0)
 	}
 
+	if asInitd {
+		if err := template.Process(templateConfig); err != nil {
+			log.Fatal(err.Error())
+		}
+		if err := initd.Execute(templateConfig); err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+
 	stopChan := make(chan bool)
 	doneChan := make(chan bool)
 	errChan := make(chan error, 10)
@@ -58,8 +68,13 @@ func main() {
 		case err := <-errChan:
 			log.Error(err.Error())
 		case s := <-signalChan:
-			log.Info(fmt.Sprintf("Captured %v. Exiting...", s))
-			close(doneChan)
+			if asInitd {
+				// TODO: Handle SIGTERM
+				initd.HandleSignal(s)
+			} else {
+				log.Info(fmt.Sprintf("Captured %v. Exiting...", s))
+				close(doneChan)
+			}
 		case <-doneChan:
 			os.Exit(0)
 		}
